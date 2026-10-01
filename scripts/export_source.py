@@ -19,6 +19,10 @@ from toi_common import ToiError, content_revision, load_json, sha256_bytes, sha2
 from toi_adapter import parse_managed_document, parse_script_document
 
 
+def reference_archive_path(patch: Path) -> Path:
+    return patch.parent.with_name(patch.parent.name + '.zip')
+
+
 def export(game: Path, patch: Path, mapping: Path, added_bases: Path, output: Path, executable: str) -> dict:
     if output.resolve().is_relative_to(ROOT):
         raise ToiError('Private authoring inputs must be exported outside the distributed checkout')
@@ -167,6 +171,7 @@ def export(game: Path, patch: Path, mapping: Path, added_bases: Path, output: Pa
     write_json(output/'patch/recipes.json',{'format':'toi-l10n/public-recipes-v1','entries':recipes})
     write_json(output/'patch/manifest.json',manifest)
     for src,dst in [('README.ko.txt','installer/README.ko.txt'),('licenses/FONT-NOTICE.txt','licenses/FONT-NOTICE.txt')]:
+        (output/dst).parent.mkdir(parents=True,exist_ok=True)
         shutil.copyfile(patch/src,output/dst)
     files_to_bind=[*text_files,'localization/inventory/items.json','assets/images/index.json']
     snapshot={'format':'toi-l10n/public-source-v1','patch_id':manifest['patch_id'],
@@ -175,7 +180,7 @@ def export(game: Path, patch: Path, mapping: Path, added_bases: Path, output: Pa
               'text_keys':len(text_rows),'inventory_items':len(inventory),'editable_images':len(images),
               'text_bindings_sha256':content_revision([{k:v for k,v in row.items() if k not in ('value','occurrence_values')} for row in sorted(text_rows,key=lambda r:r['key'])]),
               'inventory_bindings_sha256':content_revision([{k:v for k,v in row.items() if k not in ('title','info')} for row in inventory]),
-              'reference_zip_sha256':sha256_file(patch.parent.with_suffix('.zip'))}
+              'reference_zip_sha256':sha256_file(reference_archive_path(patch))}
     for subdirectory in ('installer','licenses','canonical','assets/fonts'):
         for path in sorted((output/subdirectory).rglob('*')):
             if path.is_file():snapshot['source_sha256'][path.relative_to(output).as_posix()]=sha256_file(path)

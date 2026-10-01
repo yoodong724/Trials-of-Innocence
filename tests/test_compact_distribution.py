@@ -76,7 +76,8 @@ class CompactDistributionTests(unittest.TestCase):
                 result = build.build(game, output, inputs=inputs)
             folder = output / 'KoreanPatch'
             actual = json.loads((folder / 'patch-manifest.json').read_text())
-            self.assertEqual(actual, compact_manifest(manifest, 'v7.1'))
+            version = build.load_json(build.ROOT / 'patch/build-reference.json')['version']
+            self.assertEqual(actual, compact_manifest(manifest, version))
             self.assertEqual(result['patch_id'], actual['patch_id'])
             self.assertEqual((folder / 'payload' / payload_relative(actual['changes'][0])).read_bytes(), new)
             with patch.object(verify, 'read_sources', return_value=sources):
@@ -88,6 +89,24 @@ class CompactDistributionTests(unittest.TestCase):
                 self.assertTrue(all(name.isascii() for name in zipped.namelist()))
                 for name in zipped.namelist():
                     self.assertEqual(zipped.read(name), (output / name).read_bytes())
+
+    def test_compact_manifest_serialization_preserves_the_frozen_field_order(self):
+        manifest, old, new = self.manifest()
+        version = build.load_json(build.ROOT / 'patch/build-reference.json')['version']
+        manifest = compact_manifest(manifest, version)
+        row = manifest['changes'][0]
+        manifest['changes'][0] = {k: row[k] for k in ('path', 'payload_path', 'operation',
+                                                      'source_sha256', 'output_sha256', 'output_size')}
+        expected = (json.dumps(manifest, ensure_ascii=False, indent=2) + '\n').encode()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory); game, inputs, output = root/'game', root/'inputs', root/'output'
+            game.mkdir(); inputs.mkdir(); original = game/'original'; original.write_bytes(old)
+            sources = (manifest, {}, manifest['changes'], [], [], [])
+            with patch.object(build, 'read_sources', return_value=sources), \
+                 patch.object(build, 'original_file', return_value=original), \
+                 patch.object(build, 'reconstruct', return_value=new):
+                build.build(game, output, inputs=inputs)
+            self.assertEqual((output/'KoreanPatch/patch-manifest.json').read_bytes(), expected)
 
 
 if __name__ == '__main__':

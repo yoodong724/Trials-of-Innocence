@@ -173,6 +173,7 @@ def build(game: Path, output: Path, root: Path=ROOT, edited: bool=False, executa
     for rows,group in [(text_rows,by_text),(inventory,by_inventory),(images,by_images)]:
         for row in rows:group[row['bundle']].append(row)
     hashes={r['path']:r['sha256'] for r in manifest['game_files']}
+    baseline_changes={r['path']:r for r in manifest['changes']}
     # Confirm the entire supported game revision before doing any output work.
     for row in manifest['game_files']:
         original_file(game,row['path'],row['sha256'])
@@ -193,7 +194,8 @@ def build(game: Path, output: Path, root: Path=ROOT, edited: bool=False, executa
                 mutations+=1
                 changed_metadata[row['path'].removeprefix(AA)]=bundle_metadata(raw)
             destination=safe_path(patch/'payload',compact_name(row['path']));destination.parent.mkdir(parents=True,exist_ok=True);destination.write_bytes(raw)
-            actual_changes.append({**{k:row[k] for k in ('path','operation','source_sha256')},'output_sha256':sha256_bytes(raw),'output_size':len(raw)})
+            # Preserve the frozen manifest's field order for byte-identical ZIPs.
+            actual_changes.append({**baseline_changes[row['path']], 'output_sha256':sha256_bytes(raw),'output_size':len(raw)})
             if number%80==0:print(f'Built {number}/{len(recipes)} resources',flush=True)
         if changed_metadata:
             catalog_path=safe_path(patch/'payload',compact_name(CATALOG))

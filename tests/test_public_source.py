@@ -8,8 +8,13 @@ from source_patch import safe_path,clean_output,encode_delta,decode_delta,ROOT
 from toi_common import ToiError
 from build import read_sources,text_bindings
 from verify import verify,verify_distribution_tree
+from export_source import reference_archive_path
 
 class PublicSourceTests(unittest.TestCase):
+ def test_reference_archive_preserves_dotted_release_version(self):
+  for version in ['v7','v7.1','v7.2']:
+   folder=Path('/tmp')/('Trials-of-Innocence-KoreanPatch-test-20261002-'+version)
+   self.assertEqual(reference_archive_path(folder/'KoreanPatch'),folder.parent/(folder.name+'.zip'))
  def test_distribution_excludes_private_story_inputs(self):
   result=verify_distribution_tree()
   self.assertEqual(result['mode'],'tools_only')
