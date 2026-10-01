@@ -1,0 +1,107 @@
+{
+  "fonts": [
+    {
+      "source_path": "assets/fonts/NotoSerifKR-VF.ttf",
+      "source_size": 23776888,
+      "source_sha256": "88bb5b81bccef54628e030c269fa803b0f4935e58b347ad1ee21ca8829540a33",
+      "source_family": [
+        "Noto Serif KR"
+      ],
+      "source_copyright": [
+        "© 2017-2023 Adobe (http://www.adobe.com/)."
+      ],
+      "source_license": "SIL Open Font License 1.1",
+      "generated_family": "TOI Korean Serif",
+      "generated_style": "Bold",
+      "generated_size": 14188600,
+      "generated_sha256": "43cc813f429b2289d281c377930342813a60ae517b9df2c5149fb245636bc956",
+      "weight": 700,
+      "hangul_syllables": 11172,
+      "reserved_glyph_indices": 3021,
+      "reserved_glyph_revision": "7f0aba2b72393929cfdc3f1d8f639f5992cba3df2875dd7f58ec2c4d9b2dde15",
+      "padding_glyphs": 2897,
+      "required_codepoints": [
+        "U+D55C",
+        "U+AE00",
+        "U+D45C",
+        "U+C2DC",
+        "U+D655",
+        "U+C778"
+      ],
+      "license_path": "licenses/OFL-1.1.txt",
+      "license_sha256": "6cf3dbe8a3afffe25bd51d1b16f2c2da2ead89ff4e77f21589a2b589b45b1969",
+      "embedded_object_name": "SourceHanSerifCN-Bold-2",
+      "embedded_object_path_id": 3791408846495877928,
+      "table_overrides": {}
+    },
+    {
+      "source_path": "assets/fonts/NotoSansKR-VF.ttf",
+      "source_size": 10415532,
+      "source_sha256": "018174e8cdd366aff67c8d366c7dc806a7babbe7f2819fc23b00d59f7b8353d0",
+      "source_family": [
+        "Noto Sans KR"
+      ],
+      "source_copyright": [
+        "© 2014-2021 Adobe (http://www.adobe.com/), with Reserved Font Name 'Source'."
+      ],
+      "source_license": "SIL Open Font License 1.1",
+      "generated_family": "TOI Korean Sans",
+      "generated_style": "Bold",
+      "generated_size": 6248136,
+      "generated_sha256": "951cf7b79fffb61586b2f2c993c9be243ed00da6cf939732770d0cf3de6c6e60",
+      "weight": 700,
+      "hangul_syllables": 11172,
+      "reserved_glyph_indices": 867,
+      "reserved_glyph_revision": "f77ddcd5ad354a95687c4add79857d41e093739633dfb19427ab2e20adc12d3c",
+      "padding_glyphs": 794,
+      "required_codepoints": [
+        "U+D55C",
+        "U+AE00",
+        "U+D45C",
+        "U+C2DC",
+        "U+D655",
+        "U+C778"
+      ],
+      "reserved_glyph_count": 867,
+      "object_name": "SourceHanSansSC-Bold-2",
+      "object_path_id": 4914909458399707631,
+      "license_path": "licenses/OFL-1.1.txt",
+      "license_sha256": "6cf3dbe8a3afffe25bd51d1b16f2c2da2ead89ff4e77f21589a2b589b45b1969",
+      "table_overrides": {
+        "BASE": "assets/fonts/sans-bold-BASE.bin"
+      }
+    },
+    {
+      "source_path": "assets/fonts/NotoSansKR-VF.ttf",
+      "source_size": 10415532,
+      "source_sha256": "018174e8cdd366aff67c8d366c7dc806a7babbe7f2819fc23b00d59f7b8353d0",
+      "source_family": [
+        "Noto Sans KR"
+      ],
+      "source_copyright": [
+        "© 2014-2021 Adobe (http://www.adobe.com/), with Reserved Font Name 'Source'."
+      ],
+      "source_license": "SIL Open Font License 1.1",
+      "generated_family": "TOI Korean Sans",
+      "generated_style": "Medium",
+      "generated_size": 6261016,
+      "generated_sha256": "0637ed36ddbaaef549d7229cf6185b0def227d54b4beb8a79cf8be28b7c25411",
+      "weight": 500,
+      "hangul_syllables": 11172,
+      "reserved_glyph_indices": 1330,
+      "reserved_glyph_revision": "163d6a750f06d5f2ab2c3c4762a3bfa35c1675f6d954faf115bc55f823caa664",
+      "padding_glyphs": 1222,
+      "required_codepoints": [
+        "U+D55C",
+        "U+AE00",
+        "U+D45C",
+        "U+C2DC",
+        "U+D655",
+        "U+C778"
+      ],
+      "table_overrides": {
+        "BASE": "assets/fonts/sans-medium-BASE.bin"
+      }
+    }
+  ]
+}

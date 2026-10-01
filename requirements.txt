@@ -1,0 +1,5 @@
+UnityPy==1.25.3
+Pillow==12.2.0
+fonttools==4.63.0
+lz4==4.4.5
+brotli==1.2.0

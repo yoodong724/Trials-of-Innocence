@@ -1,0 +1,12 @@
+* text=auto
+*.py text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.cmd -text
+*.ps1 -text
+installer/README.ko.txt -text
+*.png -text
+*.ttf -text
+*.gz -text
+*.bin -text

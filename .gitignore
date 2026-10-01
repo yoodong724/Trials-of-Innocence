@@ -1,0 +1,22 @@
+__pycache__/
+*.py[cod]
+.venv/
+/game/
+/original/
+/work/
+/build/
+/release/
+/review/
+/screenshot/
+*.zip
+*.zip.sha256
+
+# Authoring content is local-only; do not publish it in Git.
+/localization/
+/canonical/
+/assets/images/
+/private-inputs/
+/patch/recipes/
+/patch/recipes.json
+/patch/manifest.json
+/patch/source-lock.json
