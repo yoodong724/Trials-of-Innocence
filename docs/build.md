@@ -12,9 +12,9 @@ python -m pip install -r requirements.txt
 python scripts/verify.py
 python -m unittest discover -s tests
 python scripts/build.py --inputs /path/to/private-inputs --game "/path/to/Trials of Innocence" \
-  --output build/v7 --zip release/Trials-of-Innocence-KoreanPatch-test-20261001-v7.zip
-python scripts/verify.py --inputs /path/to/private-inputs --folder build/v7/KoreanPatch \
-  --zip release/Trials-of-Innocence-KoreanPatch-test-20261001-v7.zip
+  --output build/v7.1 --zip release/Trials-of-Innocence-KoreanPatch-test-20261001-v7.1.zip
+python scripts/verify.py --inputs /path/to/private-inputs --folder build/v7.1/KoreanPatch \
+  --zip release/Trials-of-Innocence-KoreanPatch-test-20261001-v7.1.zip
 ```
 
 `--inputs`에는 기존 source-lock, manifest, 번역 JSON, 이미지 입력, 변경 데이터와 해당
@@ -25,6 +25,18 @@ lock에 연결된 기준 파일을 갖춘 디렉터리를 지정합니다. 개�
 `verify.py`를 입력 없이 실행하면 배포 소스에 제작 본문이 없는지 검사합니다.
 이 검사는 패치 재빌드 검증과 구분되며 CI에서도 게임 없이 실행합니다.
 입력이 있는 재빌드에서는 원본 3,875개와 패치 797개·ZIP 805개 항목을 확인합니다.
+
+v7.1부터 payload와 새 백업은 게임 상대 경로의 SHA-256을 이름으로 사용하는
+한 단계의 ASCII 파일로 보관합니다. 실제 게임 경로는 manifest의 `path`, 패치 내부
+파일명은 `payload_path`로 구분합니다. 기존 제작 입력은 빌드 때 새 배포 구조로 변환합니다.
+설치기는 실제 게임 폴더에서 원본·패치·백업·임시 파일 경로를 변경 전에 검사합니다.
+전체 경로 검사는 `python scripts/audit_patch_paths.py --manifest <patch-manifest.json>`으로
+실행하며, 다른 설치 위치는 `--game-root`로 지정합니다.
+
+Windows PowerShell 설치·복구 회귀 테스트는 WSL에서
+`TOI_WINDOWS_PATCH_TESTS=1 python -m unittest discover -s tests`로 실행합니다.
+게임·제작 입력이 필요 없는 합성 fixture와 Windows 임시 폴더를 사용하며,
+시험 프로세스 안에서만 긴 경로 제한을 활성화합니다.
 
 폰트 재생성은 `prepare_fonts.py --inputs /path/to/private-inputs --game ... --output ...`를
 사용합니다. 원본 OFL 폰트와 과거 BASE 테이블은 저장소에 있으며 고지를 유지합니다.

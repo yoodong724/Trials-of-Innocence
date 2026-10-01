@@ -12,6 +12,7 @@ from pathlib import Path, PurePosixPath
 import UnityPy
 from UnityPy.streams import EndianBinaryReader
 from toi_common import ToiError, content_revision, load_json, sha256_bytes, sha256_file
+from patch_layout import compact_name
 
 ROOT = Path(__file__).resolve().parents[1]
 AA = 'Trials of Innocence_Data/StreamingAssets/aa/'
@@ -47,8 +48,14 @@ def clean_output(output: Path, game: Path) -> Path:
 
 
 def original_file(game: Path, relative: str, expected: str) -> Path:
-    for root in (game, game / 'KoreanPatch/backup'):
+    backup = game / 'KoreanPatch/backup'
+    for root in (game, backup):
         path = safe_path(root, relative)
+        if path.is_file() and sha256_file(path) == expected:
+            return path
+    record = backup / 'backup-manifest.json'
+    if record.is_file() and load_json(record).get('format') == 'toi-l10n/game-patch-backup-v2':
+        path = safe_path(backup, compact_name(relative))
         if path.is_file() and sha256_file(path) == expected:
             return path
     raise ToiError(f'Verified original not found: {relative}')

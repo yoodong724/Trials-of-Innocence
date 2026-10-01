@@ -12,6 +12,8 @@ $ManifestHashPath = Join-Path $PatchRoot 'patch-manifest.sha256'
 $BackupRoot = Join-Path $PatchRoot 'backup'
 $StatePath = Join-Path $PatchRoot 'state.json'
 $script:CheckedDirectories = @{}
+$script:CompactBackup = $false
+$script:PathKeys = @{}
 Add-Type @'
 using System;
 using System.Runtime.InteropServices;
@@ -30,6 +32,32 @@ function Get-Sha256([string]$Path) {
         $hash.Dispose()
         $stream.Dispose()
     }
+}
+
+function Get-PathKey([string]$Relative) {
+    if (-not $script:PathKeys.ContainsKey($Relative)) {
+        $hash = [Security.Cryptography.SHA256]::Create()
+        try {
+            $bytes = [Text.Encoding]::UTF8.GetBytes($Relative)
+            $script:PathKeys[$Relative] = ([BitConverter]::ToString($hash.ComputeHash($bytes))).Replace('-', '').ToLowerInvariant() + '.bin'
+        } finally { $hash.Dispose() }
+    }
+    return $script:PathKeys[$Relative]
+}
+
+function Resolve-Payload([object]$Row) {
+    $relative = $Row.path
+    if ($Row.PSObject.Properties.Name -contains 'payload_path') {
+        if ($Row.payload_path -ne (Get-PathKey $Row.path)) { throw "Invalid compact payload path: $($Row.path)" }
+        $relative = $Row.payload_path
+    }
+    return Resolve-Under (Join-Path $PatchRoot 'payload') $relative
+}
+
+function Resolve-BackupFile([string]$Root, [object]$Row) {
+    $relative = $Row.path
+    if ($script:CompactBackup) { $relative = Get-PathKey $Row.path }
+    return Resolve-Under $Root $relative
 }
 
 function Assert-NoReparse([string]$Path) {
@@ -52,6 +80,12 @@ function Assert-Parents([string]$Path, [string]$Root) {
     }
 }
 
+function Assert-PathLength([string]$Path) {
+    if ($Path.Length -gt 259 -or ([IO.Path]::GetDirectoryName($Path)).Length -gt 247) {
+        throw "Windows path limit exceeded ($($Path.Length) characters): $Path. Use a shorter Steam library path and extract the patch there."
+    }
+}
+
 function Resolve-Under([string]$Root, [string]$Relative) {
     if ([string]::IsNullOrEmpty($Relative) -or $Relative.Contains('\') -or $Relative.StartsWith('/') -or $Relative.Contains(':')) {
         throw "Invalid relative path: $Relative"
@@ -61,7 +95,9 @@ function Resolve-Under([string]$Root, [string]$Relative) {
             throw "Invalid path segment: $Relative"
         }
     }
-    $path = [IO.Path]::GetFullPath((Join-Path $Root $Relative.Replace('/', '\')))
+    $path = $Root + '\' + $Relative.Replace('/', '\')
+    Assert-PathLength $path
+    $path = [IO.Path]::GetFullPath($path)
     if (-not $path.StartsWith($Root + '\', [StringComparison]::OrdinalIgnoreCase)) {
         throw "Path escapes its root: $Relative"
     }
@@ -76,7 +112,8 @@ function Assert-Hash([string]$Path, [string]$Expected, [string]$Label) {
 }
 
 function Replace-Atomic([string]$Source, [string]$Destination) {
-    $temporary = $Destination + '.ko-tmp-' + [Guid]::NewGuid().ToString('N')
+    $temporary = Join-Path ([IO.Path]::GetDirectoryName($Destination)) ('.ko-tmp-' + [Guid]::NewGuid().ToString('N'))
+    Assert-PathLength $temporary
     try {
         [IO.File]::Copy($Source, $temporary, $false)
         if (-not [KoreanPatchFileOps]::MoveFileEx($temporary, $Destination, 9)) {
@@ -91,6 +128,8 @@ function Replace-Atomic([string]$Source, [string]$Destination) {
 function Write-JsonNew([string]$Path, [object]$Value) {
     $json = (ConvertTo-Json -InputObject $Value -Depth 10) + "`r`n"
     $temporary = $Path + '.tmp-' + [Guid]::NewGuid().ToString('N')
+    Assert-PathLength $Path
+    Assert-PathLength $temporary
     try {
         [IO.File]::WriteAllText($temporary, $json, (New-Object System.Text.UTF8Encoding($false)))
         if ([IO.File]::Exists($Path)) { throw "File already exists: $Path" }
@@ -120,6 +159,12 @@ function Get-Manifest {
         throw 'Unsupported or incomplete Korean patch manifest.'
     }
     $seen = @{}
+    foreach ($row in $manifest.game_files) { [void](Resolve-Under $GameRoot $row.path) }
+    $pending = Join-Path $PatchRoot ('backup.pending-' + ('0' * 32))
+    foreach ($path in @($StatePath, (Join-Path $pending 'backup-manifest.json'))) {
+        Assert-PathLength $path
+        Assert-PathLength ($path + '.tmp-' + ('0' * 32))
+    }
     foreach ($row in $manifest.changes) {
         if ($seen.ContainsKey($row.path)) { throw "Duplicate patch path: $($row.path)" }
         $seen[$row.path] = $true
@@ -135,16 +180,21 @@ function Get-Manifest {
         if ($row.operation -eq 'add' -and $null -ne $row.source_sha256) {
             throw "New file must not claim an original hash: $($row.path)"
         }
-        [void](Resolve-Under $GameRoot $row.path)
-        [void](Resolve-Under (Join-Path $PatchRoot 'payload') $row.path)
+        $destination = Resolve-Under $GameRoot $row.path
+        Assert-PathLength (Join-Path ([IO.Path]::GetDirectoryName($destination)) ('.ko-tmp-' + ('0' * 32)))
+        [void](Resolve-Payload $row)
+        if ($row.operation -eq 'replace') {
+            $name = Get-PathKey $row.path
+            Assert-PathLength (Join-Path $BackupRoot $name)
+            Assert-PathLength (Join-Path $pending $name)
+        }
     }
     return $manifest
 }
 
 function Assert-Payload([object]$Manifest) {
-    $payloadRoot = Join-Path $PatchRoot 'payload'
     foreach ($row in $Manifest.changes) {
-        $source = Resolve-Under $payloadRoot $row.path
+        $source = Resolve-Payload $row
         Assert-Hash $source $row.output_sha256 'patch payload'
     }
 }
@@ -173,9 +223,10 @@ function Assert-Backup([object]$Manifest) {
     $recordPath = Join-Path $BackupRoot 'backup-manifest.json'
     if (-not [IO.File]::Exists($recordPath)) { throw 'Backup manifest is missing.' }
     $record = Get-Content -LiteralPath $recordPath -Raw -Encoding UTF8 | ConvertFrom-Json
-    if ($record.format -ne 'toi-l10n/game-patch-backup-v1' -or $record.patch_id -ne $Manifest.patch_id -or $record.files.Count -ne $Manifest.changes.Count) {
+    if ($record.format -notin @('toi-l10n/game-patch-backup-v1', 'toi-l10n/game-patch-backup-v2') -or $record.patch_id -ne $Manifest.patch_id -or $record.files.Count -ne $Manifest.changes.Count) {
         throw 'Backup belongs to a different patch.'
     }
+    $script:CompactBackup = $record.format -eq 'toi-l10n/game-patch-backup-v2'
     $byPath = @{}
     foreach ($row in $record.files) {
         if ($byPath.ContainsKey($row.path)) { throw "Duplicate backup path: $($row.path)" }
@@ -186,7 +237,7 @@ function Assert-Backup([object]$Manifest) {
             throw "Backup entry mismatch: $($row.path)"
         }
         if ($row.operation -eq 'add') { continue }
-        $path = Resolve-Under $BackupRoot $row.path
+        $path = Resolve-BackupFile $BackupRoot $row
         Assert-Hash $path $row.source_sha256 'backup file'
     }
 }
@@ -198,6 +249,7 @@ function New-Backup([object]$Manifest) {
         return
     }
     Write-Output '[3/4] Backing up original files...'
+    $script:CompactBackup = $true
     $pending = Join-Path $PatchRoot ('backup.pending-' + [Guid]::NewGuid().ToString('N'))
     [IO.Directory]::CreateDirectory($pending) | Out-Null
     try {
@@ -206,7 +258,7 @@ function New-Backup([object]$Manifest) {
         foreach ($row in $Manifest.changes) {
             if ($row.operation -eq 'replace') {
                 $source = Resolve-Under $GameRoot $row.path
-                $destination = Resolve-Under $pending $row.path
+                $destination = Resolve-BackupFile $pending $row
                 [IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName($destination)) | Out-Null
                 [IO.File]::Copy($source, $destination, $false)
                 Assert-Hash $destination $row.source_sha256 'backup copy'
@@ -218,7 +270,7 @@ function New-Backup([object]$Manifest) {
             }
         }
         $record = [pscustomobject]@{
-            format = 'toi-l10n/game-patch-backup-v1'
+            format = 'toi-l10n/game-patch-backup-v2'
             patch_id = $Manifest.patch_id
             created_at = [DateTime]::UtcNow.ToString('o')
             files = $records
@@ -251,7 +303,7 @@ function Install-Patch([object]$Manifest) {
     try {
         Write-Output '[4/4] Installing Korean files...'
         foreach ($row in $Manifest.changes) {
-            $source = Resolve-Under (Join-Path $PatchRoot 'payload') $row.path
+            $source = Resolve-Payload $row
             $destination = Resolve-Under $GameRoot $row.path
             if ($row.operation -eq 'add') {
                 if ([IO.File]::Exists($destination)) { throw "New patch file unexpectedly exists: $($row.path)" }
@@ -283,7 +335,7 @@ function Install-Patch([object]$Manifest) {
                     Assert-Hash $destination $row.output_sha256 'new patch rollback file'
                     [IO.File]::Delete($destination)
                 } else {
-                    Replace-Atomic (Resolve-Under $BackupRoot $row.path) $destination
+                    Replace-Atomic (Resolve-BackupFile $BackupRoot $row) $destination
                     Assert-Hash $destination $row.source_sha256 'rollback file'
                 }
             } catch {
@@ -331,7 +383,7 @@ function Restore-Patch([object]$Manifest) {
                 [void]$restored.Add($row)
             } else {
                 if ($installed[$row.path] -eq $row.source_sha256) { continue }
-                Replace-Atomic (Resolve-Under $BackupRoot $row.path) (Resolve-Under $GameRoot $row.path)
+                Replace-Atomic (Resolve-BackupFile $BackupRoot $row) (Resolve-Under $GameRoot $row.path)
                 [void]$restored.Add($row)
                 Assert-Hash (Resolve-Under $GameRoot $row.path) $row.source_sha256 'restored file'
             }
@@ -346,7 +398,7 @@ function Restore-Patch([object]$Manifest) {
             try {
                 $destination = Resolve-Under $GameRoot $row.path
                 if ($row.operation -eq 'add') { [IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName($destination)) | Out-Null }
-                Replace-Atomic (Resolve-Under (Join-Path $PatchRoot 'payload') $row.path) $destination
+                Replace-Atomic (Resolve-Payload $row) $destination
                 Assert-Hash (Resolve-Under $GameRoot $row.path) $row.output_sha256 'restore rollback file'
             } catch {
                 $failures += $row.path

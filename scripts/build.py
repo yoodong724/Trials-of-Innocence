@@ -15,6 +15,7 @@ from toi_common import (ToiError, content_revision, load_json, sha256_bytes,
                         sha256_file, staged_output_directory)
 from source_patch import (AA, CATALOG, ROOT, baseline_manifest, clean_output,
                           original_file, reconstruct, safe_path, write_json)
+from patch_layout import audit_windows_paths, compact_manifest, compact_name, payload_relative
 import hashlib
 import zlib
 
@@ -166,6 +167,8 @@ def build(game: Path, output: Path, root: Path=ROOT, edited: bool=False, executa
     if output.resolve().is_relative_to(inputs) or inputs.is_relative_to(output.resolve()):
         raise ToiError('Build output must be separate from private inputs')
     manifest,lock,recipes,text_rows,inventory,images=read_sources(inputs,edited)
+    version=load_json(root/'patch/build-reference.json')['version']
+    audit_windows_paths(compact_manifest(manifest,version))
     by_text,by_inventory,by_images=(defaultdict(list) for _ in range(3))
     for rows,group in [(text_rows,by_text),(inventory,by_inventory),(images,by_images)]:
         for row in rows:group[row['bundle']].append(row)
@@ -189,20 +192,19 @@ def build(game: Path, output: Path, root: Path=ROOT, edited: bool=False, executa
                 if not edited:raise ToiError('Frozen translation differs from the v7 payload')
                 mutations+=1
                 changed_metadata[row['path'].removeprefix(AA)]=bundle_metadata(raw)
-            destination=safe_path(patch/'payload',row['path']);destination.parent.mkdir(parents=True,exist_ok=True);destination.write_bytes(raw)
+            destination=safe_path(patch/'payload',compact_name(row['path']));destination.parent.mkdir(parents=True,exist_ok=True);destination.write_bytes(raw)
             actual_changes.append({**{k:row[k] for k in ('path','operation','source_sha256')},'output_sha256':sha256_bytes(raw),'output_size':len(raw)})
             if number%80==0:print(f'Built {number}/{len(recipes)} resources',flush=True)
         if changed_metadata:
-            catalog_path=safe_path(patch/'payload',CATALOG)
+            catalog_path=safe_path(patch/'payload',compact_name(CATALOG))
             catalog=AddressablesCatalog(load_json(catalog_path)).patched_bundle_metadata(changed_metadata)
             raw=json.dumps(catalog,ensure_ascii=False,separators=(',',':'),allow_nan=False).encode('utf-8')
             catalog_path.write_bytes(raw)
             for row in actual_changes:
                 if row['path']==CATALOG:row['output_sha256'],row['output_size']=sha256_bytes(raw),len(raw)
-        result=dict(manifest)
+        result=compact_manifest({**manifest,'changes':actual_changes},version)
         if mutations:
             result['name']='Trials of Innocence Korean patch (source edit)'
-            result['changes']=actual_changes
             result['public_source_revision']=content_revision({'text':text_rows,'inventory':inventory,
                 'images':[{k:sha256_file(safe_path(inputs,r[k])) for k in ('pixels','mask')} for r in images]})
             result['patch_id']=content_revision({k:v for k,v in result.items() if k!='patch_id'})
@@ -223,7 +225,7 @@ def package(folder: Path, archive: Path):
     manifest=load_json(folder/'patch-manifest.json')
     if content_revision({k:v for k,v in manifest.items() if k!='patch_id'})!=manifest['patch_id']:raise ToiError('Invalid output manifest')
     for row in manifest['changes']:
-        path=safe_path(folder/'payload',row['path'])
+        path=safe_path(folder/'payload',payload_relative(row))
         if sha256_file(path)!=row['output_sha256'] or path.stat().st_size!=row['output_size']:raise ToiError('Cannot package an invalid payload')
     files=[p for p in folder.rglob('*') if p.is_file()]
     if len(files)!=len(manifest['changes'])+8 or any(p.is_symlink() for p in folder.rglob('*')):raise ToiError('Unexpected package files')

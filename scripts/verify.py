@@ -8,6 +8,7 @@ from pathlib import Path
 from build import read_sources
 from source_patch import ROOT, baseline_manifest, safe_path
 from toi_common import ToiError, load_json, sha256_file, content_revision
+from patch_layout import audit_windows_paths, compact_manifest, payload_relative
 
 
 def verify(folder: Path | None = None, archive: Path | None = None, edited: bool = False, inputs: Path | None=None):
@@ -22,17 +23,19 @@ def verify(folder: Path | None = None, archive: Path | None = None, edited: bool
         actual=load_json(folder/'patch-manifest.json')
         if content_revision({k:v for k,v in actual.items() if k!='patch_id'})!=actual['patch_id']:
             raise ToiError('Output patch ID mismatch')
-        if not edited and actual!=baseline:raise ToiError('Output differs from the frozen v7 manifest')
+        reference=load_json(ROOT/'patch/build-reference.json')
+        if not edited and actual!=compact_manifest(baseline,reference['version']):raise ToiError('Output differs from the frozen compact manifest')
+        audit_windows_paths(actual)
         if actual['game_files']!=baseline['game_files']:raise ToiError('Output supports a different game revision')
         if (folder/'patch-manifest.sha256').read_text().strip()!=sha256_file(folder/'patch-manifest.json'):
             raise ToiError('Output manifest sidecar mismatch')
         paths={r['path'] for r in actual['changes']}
         if len(paths)!=len(recipes) or paths!={r['path'] for r in recipes}:raise ToiError('Output resource set differs')
         for row in actual['changes']:
-            path=safe_path(folder/'payload',row['path'])
+            path=safe_path(folder/'payload',payload_relative(row))
             if path.stat().st_size!=row['output_size'] or sha256_file(path)!=row['output_sha256']:
                 raise ToiError('Output resource fingerprint mismatch')
-        expected={f'payload/{p}' for p in paths}|{'patch-manifest.json','patch-manifest.sha256','install.cmd','restore.cmd','patch.ps1','README.ko.txt','licenses/OFL-1.1.txt','licenses/FONT-NOTICE.txt'}
+        expected={f'payload/{payload_relative(row)}' for row in actual['changes']}|{'patch-manifest.json','patch-manifest.sha256','install.cmd','restore.cmd','patch.ps1','README.ko.txt','licenses/OFL-1.1.txt','licenses/FONT-NOTICE.txt'}
         actual_paths={p.relative_to(folder).as_posix() for p in folder.rglob('*') if p.is_file()}
         if expected!=actual_paths or any(p.is_symlink() for p in folder.rglob('*')):raise ToiError('Unexpected output package files')
         for name in ['install.cmd','restore.cmd','patch.ps1']:
@@ -48,7 +51,7 @@ def verify(folder: Path | None = None, archive: Path | None = None, edited: bool
                     if zipped.read(name)!=safe_path(folder,name.removeprefix('KoreanPatch/')).read_bytes():
                         raise ToiError('Archive contents differ from the build')
             digest=sha256_file(archive)
-            if not edited and digest!=lock['reference_zip_sha256']:raise ToiError('Archive differs from the reference v7 ZIP')
+            if not edited and digest!=reference['reference_zip_sha256']:raise ToiError('Archive differs from the reference ZIP')
             result.update(archive='pass',zip_sha256=digest)
     elif archive:raise ToiError('--zip requires --folder')
     return result

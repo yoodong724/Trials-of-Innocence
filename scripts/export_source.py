@@ -10,6 +10,7 @@ import json
 import shutil
 from collections import defaultdict
 from pathlib import Path
+from patch_layout import payload_relative
 import UnityPy
 from PIL import Image, ImageChops
 from source_patch import (ROOT, AA, bundle_header, encode_delta, member_bytes, original_file,
@@ -38,9 +39,10 @@ def export(game: Path, patch: Path, mapping: Path, added_bases: Path, output: Pa
     if len({e['stable_key'] for g in text_groups.values() for e in g}) != 49861:
         raise ToiError('Mapping must contain exactly 49,861 unique stable keys')
     text_rows = []
+    changes = {row['path']: row for row in manifest['changes']}
     for number, change in enumerate(manifest['changes'], 1):
         relative = change['path']
-        target_path = safe_path(patch / 'payload', relative)
+        target_path = safe_path(patch / 'payload', payload_relative(change))
         target = target_path.read_bytes()
         if sha256_bytes(target) != change['output_sha256'] or len(target) != change['output_size']:
             raise ToiError(f'Patch payload mismatch: {relative}')
@@ -141,7 +143,7 @@ def export(game: Path, patch: Path, mapping: Path, added_bases: Path, output: Pa
     # Capture extra managed names not represented in the original 49,861-key mapping.
     for relative, group in text_groups.items():
         if group[0]['record_kind'] != 'managed_text':continue
-        env=UnityPy.load(safe_path(patch/'payload',relative).read_bytes())
+        env=UnityPy.load(safe_path(patch/'payload',payload_relative(changes[relative])).read_bytes())
         path_id=group[0]['ja_object_path_id']
         obj=next(o for o in env.objects if o.path_id==path_id)
         doc=parse_managed_document(obj.read().m_Script)
