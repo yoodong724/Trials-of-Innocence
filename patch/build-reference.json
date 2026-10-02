@@ -1,9 +1,9 @@
 {
   "format": "toi-l10n/distribution-reference-v1",
-  "version": "v7.2",
+  "version": "v7.3",
   "game_revision": "547069a04d62fda1ac04bb5bd96eee8c730a7fde578af4e9278a8430472cef39",
-  "patch_id": "9e4c9c429f756f863bea8d2457fa0715f6b5fabfeb7e6945921c21707dc9054c",
-  "reference_zip_sha256": "c74a57ecc3efab6fd4a098c619423478feb31254eb189ded24085f2a23a8b191",
-  "payload_files": 797,
-  "added_files": 12
+  "patch_id": "410fa693a5657719185ee560d19fff33ee3361f881101f3fa3aa8373aa0cb5d5",
+  "reference_zip_sha256": "2539d5f65bc4187624fba108719a86338962f2a5fa0dbe3bd50a0c1307cd46f6",
+  "payload_files": 826,
+  "added_files": 37
 }

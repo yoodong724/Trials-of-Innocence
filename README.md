@@ -1,21 +1,24 @@
 # Trials of Innocence 한글패치
 
-**[한글패치 다운로드](https://github.com/yoodong724/Trials-of-Innocence/releases)** · [변경 내역](CHANGELOG.md)
+**[한글패치 다운로드](https://github.com/yoodong724/Trials-of-Innocence/releases/tag/v7.3)** · [변경 내역](CHANGELOG.md)
 
 ## 대응 버전
 
 | 항목 | 버전 |
 |---|---|
-| 한글패치 | v7.2 (시험 패치) |
+| 한글패치 | v7.3 (시험 패치) |
 | 게임 | Steam Windows판, 빌드 **18618782** |
 | 해당 게임 빌드 업데이트 날짜 | **2025년 5월 27일** (한국 시간) |
 
 게임 빌드와 업데이트 날짜: [SteamDB](https://steamdb.info/app/2983140/depots/).
 
+v7.3은 승인된 배경·로고와 반박 버튼을 반영하고, 다음 버튼의 글자·크기·위치를 통일했습니다.
+기존 대사·퍼즐·편지 수정과 긴 경로 설치 오류 수정도 포함합니다.
+
 ## 설치 방법
 
 1. 게임을 종료합니다.
-2. 다운로드 페이지의 **Assets**에서 한글패치 ZIP을 받습니다. `Source code`는 설치용 패치가 아닙니다.
+2. 다운로드 페이지의 **Assets**에서 `Trials-of-Innocence-KoreanPatch-test-20261002-v7.3.zip`을 받습니다. `Source code`는 설치용 패치가 아닙니다.
 3. Steam 라이브러리에서 게임을 우클릭하고 **관리 → 로컬 파일 탐색**으로 게임 폴더를 엽니다.
 4. ZIP 안의 `KoreanPatch` 폴더를 게임 폴더에 넣습니다.
 5. `KoreanPatch/install.cmd`를 실행합니다.
@@ -28,6 +31,9 @@
 
 v7 설치가 `[1/4]` 파일 검사에서 실패했다면 게임 파일은 바뀌지 않았습니다.
 기존 `KoreanPatch` 폴더를 다른 이름으로 보관하고 최신 ZIP을 새로 압축 해제하십시오.
+
+ZIP 내부 대사·그림 검사와 Windows 임시 게임 사본의 설치·복구를 확인했습니다.
+실제 게임 화면의 전 구간 검증은 완료되지 않았습니다.
 
 ## 저장소 소스 안내
 
