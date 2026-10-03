@@ -12,9 +12,9 @@ python -m pip install -r requirements.txt
 python scripts/verify.py
 python -m unittest discover -s tests
 python scripts/build.py --inputs /path/to/private-inputs --game "/path/to/Trials of Innocence" \
-  --output build/v7.5 --zip release/Trials-of-Innocence-KoreanPatch-test-20261003-v7.5.zip
-python scripts/verify.py --inputs /path/to/private-inputs --folder build/v7.5/KoreanPatch \
-  --zip release/Trials-of-Innocence-KoreanPatch-test-20261003-v7.5.zip
+  --output build/v7.6 --zip release/Trials-of-Innocence-KoreanPatch-test-20261003-v7.6.zip
+python scripts/verify.py --inputs /path/to/private-inputs --folder build/v7.6/KoreanPatch \
+  --zip release/Trials-of-Innocence-KoreanPatch-test-20261003-v7.6.zip
 ```
 
 `--inputs`에는 기존 source-lock, manifest, 번역 JSON, 이미지 입력, 변경 데이터와 해당
@@ -24,7 +24,7 @@ lock에 연결된 기준 파일을 갖춘 디렉터리를 지정합니다. 개�
 
 `verify.py`를 입력 없이 실행하면 배포 소스에 제작 본문이 없는지 검사합니다.
 이 검사는 패치 재빌드 검증과 구분되며 CI에서도 게임 없이 실행합니다.
-입력이 있는 재빌드에서는 원본 3,875개와 패치 826개·ZIP 834개 항목을 확인합니다.
+입력이 있는 재빌드에서는 원본 3,875개와 패치 827개·ZIP 835개 항목을 확인합니다.
 
 v7.1부터 payload와 새 백업은 게임 상대 경로의 SHA-256을 이름으로 사용하는
 한 단계의 ASCII 파일로 보관합니다. 실제 게임 경로는 manifest의 `path`, 패치 내부
