@@ -1,25 +1,25 @@
 # Trials of Innocence 한글패치
 
-**[한글패치 다운로드](https://github.com/yoodong724/Trials-of-Innocence/releases/tag/v7.7)** · [변경 내역](CHANGELOG.md)
+**[한글패치 다운로드](https://github.com/yoodong724/Trials-of-Innocence/releases/tag/v7.8)** · [변경 내역](CHANGELOG.md)
 
 ## 대응 버전
 
 | 항목 | 버전 |
 |---|---|
-| 한글패치 | v7.7 (시험 패치) |
+| 한글패치 | v7.8 (시험 패치) |
 | 게임 | Steam Windows판, 빌드 **18618782** |
 | 해당 게임 빌드 업데이트 날짜 | **2025년 5월 27일** (한국 시간) |
 
 게임 빌드와 업데이트 날짜: [SteamDB](https://steamdb.info/app/2983140/depots/).
 
-v7.7은 증거물 섬네일 35개를 한글화하고, 4장의 대사와 그림 낭독·말장난을 다듬었습니다.
-대사와 그림의 국가명·산 이름 표기도 톈자오민국·칭루산으로 통일했습니다.
-기존 v7.6의 승인 배경·버튼, 대사·퍼즐·편지 수정과 긴 경로 설치 오류 수정도 포함합니다.
+v7.8은 앞뒤 응답이 어긋난 대사를 고치고, 광산 공원의 엘리베이터 탑승 구역을 승강장으로 통일했습니다.
+양 윈옌의 ‘후생’ 자칭을 평범한 일인칭으로 바꾸고, 남아 있던 산 이름도 칭루산으로 맞췄습니다.
+기존 v7.7의 섬네일·승인 그림, 대사·퍼즐·편지 수정과 긴 경로 설치 오류 수정도 포함합니다.
 
 ## 설치 방법
 
 1. 게임을 종료합니다.
-2. 다운로드 페이지의 **Assets**에서 `Trials-of-Innocence-KoreanPatch-test-20261003-v7.7.zip`을 받습니다. `Source code`는 설치용 패치가 아닙니다.
+2. 다운로드 페이지의 **Assets**에서 `Trials-of-Innocence-KoreanPatch-test-20261004-v7.8.zip`을 받습니다. `Source code`는 설치용 패치가 아닙니다.
 3. Steam 라이브러리에서 게임을 우클릭하고 **관리 → 로컬 파일 탐색**으로 게임 폴더를 엽니다.
 4. ZIP 안의 `KoreanPatch` 폴더를 게임 폴더에 넣습니다.
 5. `KoreanPatch/install.cmd`를 실행합니다.

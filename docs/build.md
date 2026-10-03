@@ -12,9 +12,9 @@ python -m pip install -r requirements.txt
 python scripts/verify.py
 python -m unittest discover -s tests
 python scripts/build.py --inputs /path/to/private-inputs --game "/path/to/Trials of Innocence" \
-  --output build/v7.7 --zip release/Trials-of-Innocence-KoreanPatch-test-20261003-v7.7.zip
-python scripts/verify.py --inputs /path/to/private-inputs --folder build/v7.7/KoreanPatch \
-  --zip release/Trials-of-Innocence-KoreanPatch-test-20261003-v7.7.zip
+  --output build/v7.8 --zip release/Trials-of-Innocence-KoreanPatch-test-20261004-v7.8.zip
+python scripts/verify.py --inputs /path/to/private-inputs --folder build/v7.8/KoreanPatch \
+  --zip release/Trials-of-Innocence-KoreanPatch-test-20261004-v7.8.zip
 ```
 
 `--inputs`에는 기존 source-lock, manifest, 번역 JSON, 이미지 입력, 변경 데이터와 해당
