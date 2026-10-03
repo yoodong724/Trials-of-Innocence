@@ -1,4 +1,4 @@
-﻿Trials of Innocence 한국어 시험 패치 v7.3
+﻿Trials of Innocence 한국어 시험 패치 v7.4
 
 1. 게임을 종료합니다.
 2. 기존 KoreanPatch가 설치돼 있다면 그 restore.cmd로 먼저 원본 상태로 복구합니다.
