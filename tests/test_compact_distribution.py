@@ -16,6 +16,44 @@ from toi_common import content_revision, sha256_bytes
 
 
 class CompactDistributionTests(unittest.TestCase):
+    def test_packager_reproduces_reference_zip_metadata_and_order(self):
+        manifest, _, data = self.manifest()
+        manifest = compact_manifest(manifest, 'v1.0.0')
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory); folder = root / 'KoreanPatch'
+            payload = folder / 'payload' / payload_relative(manifest['changes'][0])
+            payload.parent.mkdir(parents=True); payload.write_bytes(data)
+            (folder / 'patch-manifest.json').write_text(json.dumps(manifest))
+            extras = ['README.ko.txt', 'install.cmd', 'licenses/FONT-NOTICE.txt',
+                      'licenses/OFL-1.1.txt', 'patch-manifest.json', 'patch-manifest.sha256',
+                      'patch.ps1', 'restore.cmd']
+            for name in extras:
+                path = folder / name; path.parent.mkdir(parents=True, exist_ok=True)
+                if not path.exists(): path.write_bytes(name.encode())
+            order = [payload] + [folder / name for name in extras]
+            expected = root / 'expected.zip'
+            with zipfile.ZipFile(expected, 'w', compression=zipfile.ZIP_STORED) as zipped:
+                for path in order:
+                    info = zipfile.ZipInfo('KoreanPatch/' + path.relative_to(folder).as_posix(),
+                                           date_time=(2026, 10, 4, 0, 0, 0))
+                    info.external_attr = 0o100644 << 16
+                    zipped.writestr(info, path.read_bytes())
+            reference = {'zip_format': {'timestamp': [2026, 10, 4, 0, 0, 0],
+                                       'order': 'manifest-payloads-then-sorted-metadata'}}
+            with patch.object(build, 'load_json', side_effect=lambda path:
+                              reference if path.name == 'build-reference.json' else json.loads(path.read_text())):
+                actual = root / 'actual.zip'; build.package(folder, actual)
+            self.assertEqual(actual.read_bytes(), expected.read_bytes())
+
+    def test_release_names_keep_legacy_patch_id_and_support_revision_suffix(self):
+        manifest, _, _ = self.manifest()
+        for version in ('v7', 'v7.8', 'v1.0.0', 'v1.0.0-rc2'):
+            converted = compact_manifest(manifest, version)
+            label = 'test patch' if version in ('v7', 'v7.8') else 'patch'
+            self.assertEqual(converted['name'], f'Trials of Innocence Korean {label} {version}')
+            self.assertEqual(compact_manifest(converted, version), converted)
+            self.assertEqual(converted['game_files'], manifest['game_files'])
+
     def manifest(self):
         old, new = b'original', b'{"catalog":"test"}'
         row = {'path': CATALOG, 'operation': 'replace', 'source_sha256': sha256_bytes(old),

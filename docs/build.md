@@ -12,9 +12,9 @@ python -m pip install -r requirements.txt
 python scripts/verify.py
 python -m unittest discover -s tests
 python scripts/build.py --inputs /path/to/private-inputs --game "/path/to/Trials of Innocence" \
-  --output build/v7.8 --zip release/Trials-of-Innocence-KoreanPatch-test-20261004-v7.8.zip
-python scripts/verify.py --inputs /path/to/private-inputs --folder build/v7.8/KoreanPatch \
-  --zip release/Trials-of-Innocence-KoreanPatch-test-20261004-v7.8.zip
+  --output build/v1.0.0 --zip release/TrialsOfInnocence-KoreanPatch-v1.0.0.zip
+python scripts/verify.py --inputs /path/to/private-inputs --folder build/v1.0.0/KoreanPatch \
+  --zip release/TrialsOfInnocence-KoreanPatch-v1.0.0.zip
 ```
 
 `--inputs`에는 기존 source-lock, manifest, 번역 JSON, 이미지 입력, 변경 데이터와 해당
@@ -24,7 +24,7 @@ lock에 연결된 기준 파일을 갖춘 디렉터리를 지정합니다. 개�
 
 `verify.py`를 입력 없이 실행하면 배포 소스에 제작 본문이 없는지 검사합니다.
 이 검사는 패치 재빌드 검증과 구분되며 CI에서도 게임 없이 실행합니다.
-입력이 있는 재빌드에서는 원본 3,875개와 패치 862개·ZIP 870개 항목을 확인합니다.
+입력이 있는 재빌드에서는 원본 3,875개와 패치 866개·ZIP 874개 항목을 확인합니다.
 
 v7.1부터 payload와 새 백업은 게임 상대 경로의 SHA-256을 이름으로 사용하는
 한 단계의 ASCII 파일로 보관합니다. 실제 게임 경로는 manifest의 `path`, 패치 내부
@@ -40,3 +40,19 @@ Windows PowerShell 설치·복구 회귀 테스트는 WSL에서
 
 폰트 재생성은 `prepare_fonts.py --inputs /path/to/private-inputs --game ... --output ...`를
 사용합니다. 원본 OFL 폰트와 과거 BASE 테이블은 저장소에 있으며 고지를 유지합니다.
+
+## 정식 배포의 파일명과 ZIP 재현
+
+정식 배포 파일명은 `TrialsOfInnocence-KoreanPatch-v1.0.0.zip`입니다.
+후속 수정 배포는 `TrialsOfInnocence-KoreanPatch-v1.0.0-rc2.zip`처럼 버전 뒤에 `-rcN`을 붙입니다.
+
+`patch/build-reference.json`의 `zip_format`은 해당 Release의 ZIP 항목 순서와 고정 시간을 기록합니다.
+v1.0.0은 manifest의 changes 순서대로 payload를 넣은 뒤, 설치기·안내·라이선스 등 나머지 파일을
+이름순으로 넣습니다. 이 정보가 없는 과거 참조는 기존 이름순과 시간을 사용합니다.
+제작 입력의 manifest·payload뿐 아니라 배포 안내문·설치기·라이선스와 ZIP 메타데이터까지
+같아야 `verify.py --inputs ... --folder ... --zip ...`의 기준 ZIP 지문 검사를 통과합니다.
+
+사용자의 완료된 플레이 테스트를 기준으로 v7.13의 payload·설치기를 그대로 승계해 v1.0.0으로 배포했습니다.
+승격 시 바뀐 ZIP 항목은 버전 manifest·manifest 체크섬·설치 안내 세 개이며, 원본 게임과 payload의
+전체 SHA-256 검사를 반복하지 않았습니다. 최종 배포 ZIP의 SHA-256은 한 번 계산했습니다.
+설치·복구 시 원본·payload·백업을 검사하는 기존 보호 동작은 유지합니다.

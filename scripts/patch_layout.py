@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import ntpath
+import re
 from pathlib import Path
 
 from toi_common import ToiError, content_revision, sha256_bytes
@@ -14,7 +15,9 @@ def compact_name(relative: str) -> str:
 
 
 def compact_manifest(manifest: dict, version: str) -> dict:
-    result = {**manifest, "name": f"Trials of Innocence Korean test patch {version}",
+    release = re.fullmatch(r"v\d+\.\d+\.\d+(?:-rc[1-9]\d*)?", version) is not None
+    name = f"Trials of Innocence Korean {'patch' if release else 'test patch'} {version}"
+    result = {**manifest, "name": name,
               "changes": [{**row, "payload_path": compact_name(row["path"])}
                           for row in manifest["changes"]]}
     result["patch_id"] = content_revision({k: v for k, v in result.items() if k != "patch_id"})

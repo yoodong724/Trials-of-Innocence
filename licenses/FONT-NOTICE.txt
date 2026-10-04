@@ -1,2 +1,8 @@
 Noto Serif KR and Noto Sans KR are licensed under the SIL Open Font License 1.1.
 The modified font data retains its original copyright notices and uses renamed families.
+
+Nanum Pen and Nanum Brush Script were used for handwritten image lettering.
+Copyright (c) 2010, NHN Corporation (http://www.nhncorp.com).
+Font designed by Sandoll Communications Inc. Licensed under SIL OFL 1.1.
+Reserved names include Nanum, Naver Nanum, NanumBrush, Naver NanumBrush,
+NanumPen and Naver NanumPen. Original font binaries are not included here.

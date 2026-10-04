@@ -145,6 +145,15 @@ function Assert-GameClosed {
     }
 }
 
+function Assert-PatchResourcePath([object]$Row) {
+    if ($Row.path -notlike 'Trials of Innocence_Data/StreamingAssets/aa/*' -and $Row.path -cne 'Trials of Innocence_Data/resources.assets') {
+        throw "Patch path is outside the allowed resource paths: $($Row.path)"
+    }
+    if ($Row.path -ceq 'Trials of Innocence_Data/resources.assets' -and $Row.operation -ne 'replace') {
+        throw 'The existing resources.assets file can only be replaced.'
+    }
+}
+
 function Get-Manifest {
     Assert-NoReparse $PatchRoot
     if (-not [IO.File]::Exists((Join-Path $GameRoot 'Trials of Innocence.exe'))) {
@@ -168,9 +177,7 @@ function Get-Manifest {
     foreach ($row in $manifest.changes) {
         if ($seen.ContainsKey($row.path)) { throw "Duplicate patch path: $($row.path)" }
         $seen[$row.path] = $true
-        if ($row.path -notlike 'Trials of Innocence_Data/StreamingAssets/aa/*') {
-            throw "Patch path is outside Addressables: $($row.path)"
-        }
+        Assert-PatchResourcePath $row
         if ($row.operation -notin @('replace', 'add') -or $row.output_sha256 -notmatch '^[0-9a-f]{64}$') {
             throw "Invalid patch file hash: $($row.path)"
         }

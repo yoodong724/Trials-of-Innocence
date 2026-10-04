@@ -231,10 +231,21 @@ def package(folder: Path, archive: Path):
         if sha256_file(path)!=row['output_sha256'] or path.stat().st_size!=row['output_size']:raise ToiError('Cannot package an invalid payload')
     files=[p for p in folder.rglob('*') if p.is_file()]
     if len(files)!=len(manifest['changes'])+8 or any(p.is_symlink() for p in folder.rglob('*')):raise ToiError('Unexpected package files')
+    layout = load_json(ROOT / 'patch/build-reference.json').get('zip_format')
+    ordered = sorted(files)
+    timestamp = (2026, 9, 29, 0, 0, 0)
+    if layout is not None:
+        if layout['order'] != 'manifest-payloads-then-sorted-metadata':
+            raise ToiError('Unsupported reference ZIP ordering')
+        timestamp = tuple(layout['timestamp'])
+        payloads = [safe_path(folder / 'payload', payload_relative(row)) for row in manifest['changes']]
+        ordered = payloads + sorted(set(files) - set(payloads))
+        if len(ordered) != len(files) or set(ordered) != set(files):
+            raise ToiError('Reference ZIP ordering does not cover the package')
     archive.parent.mkdir(parents=True,exist_ok=True)
     with zipfile.ZipFile(archive,'x',compression=zipfile.ZIP_STORED,allowZip64=True) as target:
-        for path in sorted(files):
-            info=zipfile.ZipInfo('KoreanPatch/'+path.relative_to(folder).as_posix(),date_time=(2026,9,29,0,0,0))
+        for path in ordered:
+            info=zipfile.ZipInfo('KoreanPatch/'+path.relative_to(folder).as_posix(),date_time=timestamp)
             info.compress_type=zipfile.ZIP_STORED;info.external_attr=0o100644<<16
             target.writestr(info,path.read_bytes())
     digest=sha256_file(archive)

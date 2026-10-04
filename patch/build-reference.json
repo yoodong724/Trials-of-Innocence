@@ -1,9 +1,28 @@
 {
   "format": "toi-l10n/distribution-reference-v1",
-  "version": "v7.8",
+  "version": "v1.0.0",
   "game_revision": "547069a04d62fda1ac04bb5bd96eee8c730a7fde578af4e9278a8430472cef39",
-  "patch_id": "64c60c416467bb2028feb2075df4bac446a9afe4c17894982f69c25aa8b1be76",
-  "reference_zip_sha256": "af34d18f663df54eec4a7807a7621388e3aa23768a5b517a2c3eae31d4cd33a0",
-  "payload_files": 862,
-  "added_files": 72
+  "patch_id": "a464f2302dcb185567037834b0c4623a17abf26489206ec6ab5356ee9c45f3dc",
+  "reference_zip_sha256": "f31b528c2ee8bf31076906e50dac4ad8f7072e60f16bc88b83eec64cb02ce9d3",
+  "payload_files": 866,
+  "added_files": 72,
+  "archive_name": "TrialsOfInnocence-KoreanPatch-v1.0.0.zip",
+  "steam_appid": 2983140,
+  "steam_build": 18618782,
+  "steam_build_update_date_kst": "2025-05-27",
+  "zip_format": {
+    "timestamp": [
+      2026,
+      10,
+      4,
+      0,
+      0,
+      0
+    ],
+    "order": "manifest-payloads-then-sorted-metadata"
+  },
+  "filename_policy": {
+    "release": "TrialsOfInnocence-KoreanPatch-v1.0.0.zip",
+    "next_revision_example": "TrialsOfInnocence-KoreanPatch-v1.0.0-rc2.zip"
+  }
 }
