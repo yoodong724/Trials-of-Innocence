@@ -1,0 +1,13 @@
+{
+  "format": "toi-l10n/steamdeck-package-v1",
+  "version": "v1.0.0",
+  "revision": "test2",
+  "archive_stem": "TrialsOfInnocence-KoreanPatch-v1.0.0-SteamDeck-test2",
+  "source_archive": "release/TrialsOfInnocence-KoreanPatch-v1.0.0.zip",
+  "source_size": 489757752,
+  "source_zip_sha256": "f31b528c2ee8bf31076906e50dac4ad8f7072e60f16bc88b83eec64cb02ce9d3",
+  "source_patch_id": "a464f2302dcb185567037834b0c4623a17abf26489206ec6ab5356ee9c45f3dc",
+  "steam_appid": 2983140,
+  "steam_build": 18618782,
+  "steam_build_update_date_kst": "2025-05-27"
+}
